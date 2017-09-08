@@ -105,8 +105,8 @@ void heap_sort(I first, I last, C c = C()) {
     }
     I p = first - 1;
 
-    // n‚ª‹ô”‚Ì‚Æ‚« p[n]‚ª’P“Æ‚ÌÅ‘å‚Å‚ ‚Á‚Ä‚Í‚È‚ç‚È‚¢ p[n]‚ğœ‚¢‚Ä\’z
-    // Å‘å’l‚ğæ‚èo‚µ‚½‚çp[n]‚ÆŒğŠ·‚·‚é‚Ì‚Å‚»‚Ì“_‚Å•’Ê‚Ì“ñ•ªƒq[ƒv‚É‚È‚é
+    // nãŒå¶æ•°ã®ã¨ã p[n]ãŒå˜ç‹¬ã®æœ€å¤§ã§ã‚ã£ã¦ã¯ãªã‚‰ãªã„ p[n]ã‚’é™¤ã„ã¦æ§‹ç¯‰
+    // æœ€å¤§å€¤ã‚’å–ã‚Šå‡ºã—ãŸã‚‰p[n]ã¨äº¤æ›ã™ã‚‹ã®ã§ãã®æ™‚ç‚¹ã§æ™®é€šã®äºŒåˆ†ãƒ’ãƒ¼ãƒ—ã«ãªã‚‹
     size_t m = (n - 1) / 2;
     if (n % 2 == 0) {
         if (c(p[n / 2], p[n])) std::swap(p[n / 2], p[n]);
@@ -159,14 +159,14 @@ void quick_sort(I first, I last, C c = C()) {
         return;
     }
     auto p = *(first + n / 2);
-    I i0 = ::partition(first, last, [&](const auto& v) { return c(v, p); });
+    I i0 = ::partition(first, last, [&](const auto& t) { return c(t, p); });
     quick_sort(first, i0, c);
-    I i1 = ::partition(i0, last, [&](const auto& v) { return !c(p, v); });
+    I i1 = ::partition(i0, last, [&](const auto& t) { return !c(p, t); });
     quick_sort(i1, last, c);
 
     //std::swap(*(first + n / 2), *(last - 1));
     //auto p = *(last - 1);
-    //I it = ::partition(first, last - 1, [&](const auto& v) { return c(v, p); });
+    //I it = ::partition(first, last - 1, [&](const auto& t) { return c(t, p); });
     //if (it < last - 1) std::swap(*it, *(last - 1));
     //quick_sort(first, it, c);
     //quick_sort(it + 1, last, c);
@@ -179,19 +179,19 @@ void intro_sort_impl(I first, I last, int m, C c = C()) {
         insertion_sort(first, last, c);
         return;
     }
-    if (m-- <= 0 || n < 1 << 12) {
+    if (m-- <= 0/* || n < 1 << 12*/) {
         heap_sort(first, last, c);
         return;
     }
     std::swap(*(first + n / 2), *(last - 1));
     auto p = *(last - 1);
-    I it = ::partition(first, last - 1, [&](const auto& v) { return c(v, p); });
+    I it = ::partition(first, last - 1, [&](const auto& t) { return c(t, p); });
     if (it < last - 1) std::swap(*it, *(last - 1));
     intro_sort_impl(first, it, m, c);
     intro_sort_impl(it + 1, last, m, c);
 
     //auto p = *(first + n / 2);
-    //I i0 = ::partition(first, last, [&](const auto& v) { return c(v, p); });
+    //I i0 = ::partition(first, last, [&](const auto& t) { return c(t, p); });
     //if (first == i0) m = 0; else intro_sort_impl(first, i0, m, c);
     //intro_sort_impl(i0, last, m, c);
 }
@@ -217,7 +217,7 @@ void merge_sort_impl(I first, I last, T *temp, C c = C()) {
     T *temp_last = temp + m, *i0 = temp;
     I it = first, i1 = mid;
     for (;;) {
-        if (c(*i0, *i1)) {
+        if (!c(*i1, *i0)) {
             *it++ = *i0++;
             if (i0 == temp_last) break;
         } else {
@@ -283,19 +283,19 @@ void merge_in_place(I first, I mid, I last, size_t n0, size_t n1, C c) {
     I i0, i1;
     size_t m0, m1;
     if (n0 >= n1) {
-        // pˆÈ‰º|pˆÈã|p–¢–|pˆÈã
+        // pä»¥ä¸‹|pä»¥ä¸Š|pæœªæº€|pä»¥ä¸Š
         m0 = n0 / 2;
         i0 = first + m0;
         i1 = ::lower_bound(mid, last, *i0, c);
         m1 = i1 - mid;
     } else {
-        // pˆÈ‰º|p‚æ‚èã|pˆÈ‰º|pˆÈã
+        // pä»¥ä¸‹|pã‚ˆã‚Šä¸Š|pä»¥ä¸‹|pä»¥ä¸Š
         m1 = (n1 - 1) / 2;
         i1 = mid + m1;
         i0 = ::upper_bound(first, mid, *i1, c);
         m0 = i0 - first;
     }
-    // rotate‚Å“™‚µ‚¢—v‘f‚ğ’Ç‚¢‰z‚·‚±‚Æ‚ª‚È‚¢‚æ‚¤‚É‚·‚é
+    // rotateã§ç­‰ã—ã„è¦ç´ ã‚’è¿½ã„è¶Šã™ã“ã¨ãŒãªã„ã‚ˆã†ã«ã™ã‚‹
     ::rotate(i0, mid, i1);
 
     merge_in_place(first, i0, i0 + m1, m0, m1, c);
@@ -316,8 +316,8 @@ void in_place_merge_sort(I first, I last, C c = C()) {
     merge_in_place(first, mid, last, m, n - m, c);
 }
 
-template <class I, class C = std::less<>>
-void radix_sort(I first, I last, C) {
+template <class I, class C>
+void radix_sort(I first, I last, C c) {
     using T = typename std::iterator_traits<I>::value_type;
     static_assert(std::is_integral<T>::value, "");
     constexpr int L = 8, M = 1 << L, K = (sizeof(T) * CHAR_BIT + L - 1) / L;
@@ -329,7 +329,7 @@ void radix_sort(I first, I last, C) {
     for (int k = 0; k < K; k++) {
         std::fill_n(m, M, 0);
         for (size_t i = 0; i < n; i++) {
-            m[(p[0][i] >> (L * k) & M - 1)]++;
+            m[(c.func(p[0][i]) >> (L * k) & M - 1)]++;
         }
         for (int j = M - 1; j > 0; j--) {
             m[j] = m[j - 1];
@@ -340,7 +340,7 @@ void radix_sort(I first, I last, C) {
         }
         for (size_t i = 0; i < n; i++) {
             T t = p[0][i];
-            p[1][m[t >> (L * k) & M - 1]++] = t;
+            p[1][m[c.func(t) >> (L * k) & M - 1]++] = t;
         }
         std::swap(p[0], p[1]);
     }
@@ -349,7 +349,7 @@ void radix_sort(I first, I last, C) {
         std::copy_n(p[1], n, p[0]);
     }
     if (std::is_signed<T>::value) {
-        T *q = ::upper_bound(p[0], p[0] + n, 0, std::greater<>());
+        T *q = ::upper_bound(p[0], p[0] + n, 0, [&](const T& t0, const T& t1) { return c(t1, t0); });
         ::rotate(p[0], q, p[0] + n);
     }
     std::free(p[1]);
@@ -360,7 +360,18 @@ void std_heap_sort(I first, I last, C c = C()) {
     std::partial_sort(first, last, last, c);
 }
 
-void print(std::vector<int> v, size_t n) {
+using T = int;
+using I = std::vector<T>::iterator;
+struct C {
+    bool operator()(const T& t0, const T& t1) {
+        return t0 / 100 < t1 / 100;
+    }
+    T func(const T& t) {
+        return t / 100;
+    }
+};
+
+void print(std::vector<T> v, size_t n) {
     for (size_t i = 0; i < n; i++) {
         std::cout << v[i] << ' ';
     }
@@ -368,35 +379,35 @@ void print(std::vector<int> v, size_t n) {
 }
 
 template <class F>
-void bench(F f) {
+void bench(F f, bool stable = false) {
     constexpr size_t N = 1000000, M = 500;
-    static std::vector<int> v(N), u(N);
+    static std::vector<T> v(N), u(N);
 
     using Duration = std::chrono::nanoseconds;
     static std::vector<Duration::rep> d(M);
 
-    std::mt19937 rnd;
+    std::mt19937_64 rnd;
     for (size_t n = 1; n <= N; n *= 10) {
         size_t l = std::min(N * 5 / n, (size_t)M);
         for (size_t k = 0; k < l; k++) {
             for (size_t i = 0; i < n; i++) {
-                v[i] = rnd(); //(rnd() >> (32 - 10)) - (int)i;
+                v[i] = (T)rnd(); //((T)rnd() >> 22) - (T)i;
             }
             int64_t s = std::accumulate(v.begin(), v.begin() + n, 0LL);
             std::copy_n(v.begin(), n, u.begin());
 
             auto t0 = std::chrono::high_resolution_clock::now();
-            f(v.begin(), v.begin() + n, std::less<>());
+            f(v.begin(), v.begin() + n, C());
             auto t1 = std::chrono::high_resolution_clock::now();
-            (t1 - t0).count();
             d[k] = std::chrono::duration_cast<Duration>(t1 - t0).count();
 
-            if (!std::is_sorted(v.begin(), v.begin() + n) || s != std::accumulate(v.begin(), v.begin() + n, 0LL)) {
-                print(v, n);
-                std::sort(u.begin(), u.begin() + n);
-                print(u, n);
-                std::cout << "failed" << std::endl;
-            }
+            if (stable && (std::stable_sort<I, C>(u.begin(), u.begin() + n, C()), std::equal(v.begin(), v.begin() + n, u.begin()))) continue;
+            if (!stable && std::is_sorted(v.begin(), v.begin() + n, C()) && s == std::accumulate(v.begin(), v.begin() + n, 0LL)) continue;
+
+            print(v, n);
+            if (!stable) std::sort(u.begin(), u.begin() + n);
+            print(u, n);
+            std::cout << "failed" << std::endl;
         }
         std::sort(d.begin(), d.begin() + l);
         l = l * 2 / 3;
@@ -405,23 +416,21 @@ void bench(F f) {
 }
 
 int main() {
-    using T = std::vector<int>::iterator;
-
-    bench(heap_sort<T>);
-    bench(intro_sort<T>);
-    bench(quick_sort<T>);
-    bench(merge_sort<T>);
-    bench(in_place_merge_sort<T>);
-    //bench(insertion_sort<T>);
-    bench(shell_sort<T>);
-    //bench(bubble_sort<T>);
-    bench(comb_sort<T>);
-    bench(radix_sort<T>);
+    bench(heap_sort<I, C>);
+    bench(intro_sort<I, C>);
+    bench(quick_sort<I, C>);
+    bench(merge_sort<I, C>, true);
+    bench(in_place_merge_sort<I, C>, true);
+    //bench(insertion_sort<I, C>, true);
+    bench(shell_sort<I, C>);
+    //bench(bubble_sort<I, C>, true);
+    bench(comb_sort<I, C>);
+    bench(radix_sort<I, C>, true);
 
     std::cout << "- STL -" << std::endl;
-    bench(std::sort<T, std::less<>>);
-    bench(std::stable_sort<T, std::less<>>);
-    bench(std_heap_sort<T>);
+    bench(std::sort<I, C>);
+    bench(std::stable_sort<I, C>, true);
+    bench(std_heap_sort<I, C>);
 
     return 0;
 }
